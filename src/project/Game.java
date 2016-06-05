@@ -1,3 +1,5 @@
+package project;
+
 //Class that handles individual games and their components
 
 import java.util.*;
