@@ -29,6 +29,7 @@ public class Client {
 		}
 		
 		while(true){
+			//System.out.println("TEST");
 			try{
 				Client client = new Client(host, port);
 				client.start();

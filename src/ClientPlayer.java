@@ -1,4 +1,5 @@
 
+import java.net.ServerSocket;
 import java.net.Socket;
 
 
@@ -7,20 +8,37 @@ import java.net.Socket;
 public class ClientPlayer extends Player{
 	private ClientPlayer opponent;
 	private HelperSocket helper;
+	private boolean isTurn = false;
+	private boolean isQuestioner = false;
 	
-	public ClientPlayer(Socket server) throws Exception{
-		helper = new HelperSocket(server);
+	public ClientPlayer(int port) throws Exception{
+		ServerSocket server = new ServerSocket(port);
+		helper = new HelperSocket(server.accept());
 		server.close();
-		
+		send("\n");
 		//Initialize Player object
 		String name = askUser("What is your username?");
+		send("\n");
 		int money = Integer.parseInt(askUser("How much money would you like to use?"));
-		
+		send("\n");
 		this.name = name;
 		this.money = money;
 		
 		
 	}
+	public boolean isTurn(){
+		return isTurn;
+	}
+	public void setTurn(boolean isTurn){
+		this.isTurn = isTurn;
+	}
+	public boolean isQuestioner(){
+		return isQuestioner;
+	}
+	public void setQuestioner(boolean isQuestioner){
+		this.isQuestioner = isQuestioner;
+	}
+	
 	public void setOpponent(ClientPlayer opponent){
 		this.opponent = opponent;
 	}
@@ -49,6 +67,10 @@ public class ClientPlayer extends Player{
 			}
 		}
 		return response;
+	}
+	
+	public void close(){
+		helper.close();
 	}
 	
 	

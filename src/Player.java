@@ -4,11 +4,13 @@ public class Player{
 	
 	protected int money = 0;
 	protected int bet = 0;
+	protected int score = 100;
 	protected String name = "";
 	protected String answer = "";
 	protected ArrayList<String> questions = new ArrayList<String>();
 	protected ArrayList<String> responses = new ArrayList<String>();
 	protected ArrayList<String> guesses = new ArrayList<String>();
+	private ArrayList<String> history = new ArrayList<String>();
 	
 	/*Constructor
 	public Player(String name, int money){
@@ -17,6 +19,9 @@ public class Player{
 	}
 	*/
 	//GET Methods
+	public int getScore(){
+		return score;
+	}
 	public int getMoney(){
 		return money;
 	}
@@ -38,6 +43,9 @@ public class Player{
 	public ArrayList<String> getGuesses(){
 		 return guesses;
 	}
+	public ArrayList<String> getHistory(){
+		return history;
+	}
 	public String getLatestQuestion(){
 		return questions.get(questions.size() - 1);
 	}
@@ -49,6 +57,9 @@ public class Player{
 	}
 	
 	//SET Methods
+	public void setScore(int score){
+		this.score = score;
+	}
 	public void setMoney(int money){
 		this.money = money;
 	}
@@ -66,6 +77,9 @@ public class Player{
 	}
 	public void addGuess(String guess){
 		guesses.add(guess);
+	}
+	public void addHistory(String log){
+		history.add(log);
 	}
 	
 	public int getEarnings(){
