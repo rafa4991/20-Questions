@@ -5,7 +5,8 @@ import java.util.Iterator;
 
 //Controller Class that handles a single thread game of 20 Questions
 public class GameController extends Thread {
-	volatile boolean finished = false;
+	boolean finished = false;
+	boolean stop = false;
 	private Game game;
 	private ClientPlayer player1;
 	private ClientPlayer player2;
@@ -72,7 +73,7 @@ public class GameController extends Thread {
 				else
 					player.setBet(bet);
 				
-				player.setMoney(player.getMoney() - player.getBet());
+				//player.setMoney(player.getMoney() - player.getBet());
 				if(player.isTurn()){
 					player.send("Waiting on opponent to make bet...");
 				}
@@ -112,20 +113,20 @@ public class GameController extends Thread {
 		player1.send("GAME START!\n");
 		player2.send("GAME START!\n");
 		player2.send("Waiting on opponent to ask question or make a guess...\n");
-		System.out.println("TEST start of playGame function");
+		//System.out.println("TEST start of playGame function");
 		while(!finished){
 			for(ClientPlayer player : players){
 				if(player.isQuestioner()){
 					if(rounds == 1){
 						player.send("First round finished. Next round!");
-						player.send("Your turn to guess your opponent's word!");
+						player.send("Your turn to guess your opponent's word!\n");
 					}
 					
 					if(player.isTurn()){
-						System.out.println("TEST before askOptions for " + player.getName());
+						//System.out.println("TEST before askOptions for " + player.getName());
 						askOptions(player);
 						if(rounds >= 2){
-							System.out.println("TEST Game finished");
+							//System.out.println("TEST Game finished");
 							finished = true;
 						}
 					}
@@ -135,7 +136,7 @@ public class GameController extends Thread {
 				}
 				else{
 					if(player.isTurn()){
-						System.out.println("TEST before askQuestion for " + player.getName());
+						//System.out.println("TEST before askQuestion for " + player.getName());
 						askQuestion(player);
 					}
 					else{
@@ -149,7 +150,7 @@ public class GameController extends Thread {
 	//Method that asks player what option they would like to use and does desired functionality.
 	public void askOptions(ClientPlayer player){
 		//boolean stillSelecting = true;
-		System.out.println("TEST start of askOptions method");
+		//System.out.println("TEST start of askOptions method");
 		while(true){
 			if(!getOpponentResponse().equals("")){
 				player.send("********");
@@ -185,7 +186,7 @@ public class GameController extends Thread {
 					if(rounds < 2){
 						player.send("First round finished. Next round!");
 						player.send("Your opponent will now try to figure out your word!\n");
-						player2.send("Waiting on opponent to ask question or make a guess...\n");
+						player.send("Waiting on opponent to ask question or make a guess...\n");
 						nextTurn();
 						nextGame();
 					}
@@ -321,24 +322,57 @@ public class GameController extends Thread {
 		loser.send("You have lost your bet of " + loser.getBet());
 		loser.send("You now have an allowance of " + loser.getMoney() + "\n\n");
 	}
-	
+	//In the case of a tie, this method gives the players the decision to settle with the tie or play a sudden death game
 	public void gameTied(){
 		
+		
+	}
+	
+	//Function that asks players after the match if they would like a re-match.
+	public void askForRematch(){
+		String message = "For there to be a rematch, both players must agree.";
+		String player1Rematch = player1.askUser("Would you like a rematch(yes/no)?");
+		String player2Rematch = player2.askUser("Would you like a rematch(yes/no)?");
+		
+		if(player1Rematch.equalsIgnoreCase("yes") && player2Rematch.equalsIgnoreCase("yes")){
+			rematch = true;
+			message = "You both agreed to a rematch!";
+			player1.send(message);
+			player2.send(message);
+		}else{
+			rematch = false;
+			message = "Sorry, someone didn't want a rematch. Maybe next time!";
+			player1.send(message);
+			player2.send(message);
+			finished = true;
+		}
 	}
 	
     @Override
 	public void run() {
-    	while(!finished){
+    	while(!stop){
     		rules();
     		askForBet();
     		askForAnswer();
     		playGame();
-    		determineWinner();
-    		
     		player1.send("Game Complete!");
     		player2.send("Game Complete!");
     		player1.send("-------------\n");
     		player2.send("-------------\n");
+    		determineWinner();
+    		
+    		askForRematch();
+    		if(rematch) {
+    			player1.reset();
+    			player2.reset();
+    			player1.setTurn(true);
+    			player1.setQuestioner(true);
+    			player2.setTurn(false);
+    			player2.setQuestioner(false);
+    			finished = false;
+    			continue;
+    		}
+    		
     		player1.close();
     		player2.close();
     	}
