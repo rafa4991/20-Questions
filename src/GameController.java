@@ -12,6 +12,8 @@ public class GameController extends Thread {
 	private ClientPlayer winner;
 	private ClientPlayer loser;
 	private int rounds = 0;
+	//private boolean tie = false;
+	private boolean rematch = false;
 	private ArrayList<ClientPlayer> players = new ArrayList<ClientPlayer>();
 	
 	//(COMPLETE) Constructor of GameController
@@ -86,14 +88,14 @@ public class GameController extends Thread {
 	
 	//(COMPLETE) Method that asks for the answer that players want their opponent to guess
 	public void askForAnswer(){
-		player2.send("Waiting on opponent to input their mystery word...");
+		player2.send("Waiting on opponent to input their mystery word...\n");
 		for(ClientPlayer player : players){
 			try{
 				String answer = player.askUser("What is the word you would like your opponent to guess?");
 				player.setAnswer(answer);
 				
 				if(player.isTurn()){
-					player.send("Waiting on opponent to input their mystery word...");
+					player.send("Waiting on opponent to input their mystery word...\n");
 				}
 			}catch(Exception e){
 				player.send("Invalid word.");
@@ -172,6 +174,7 @@ public class GameController extends Thread {
 			player.send("\n");
 			if(option.equalsIgnoreCase("a")){
 				String guess = player.askUser("What is your guess?");
+				player.send("\n");
 				player.addGuess(guess);
 				player.addHistory("Made guess: " + guess);
 				if(isGuessCorrect(guess)){
@@ -273,6 +276,56 @@ public class GameController extends Thread {
 		return finished;
 	}
 	
+	public void determineWinner(){
+		String border = "***********************";
+		player1.send(border);
+		player2.send(border);
+		
+		int player1Score = player1.getScore();
+		int player2Score = player2.getScore();
+		
+		String message = "With the final scores being-\n"
+				+ player1.getName() + ": " + player1.getScore() + "\n"
+				+ player2.getName() + ": " + player2.getScore() + "\n\n";
+		
+		player1.send(message);
+		player2.send(message);
+		
+		if(player1Score > player2Score){
+			winner = player1;
+			loser = player2;
+			
+		}
+		else if(player1Score < player2Score){
+			winner = player2;
+			loser = player1;
+		}
+		else{
+			//tie = true;
+			message = "You are tied! This is awkward.\n";
+			player1.send(message);
+			player2.send(message);
+			gameTied();
+			return;
+		}
+		
+		winner.send("You have won the game! Good job, champ! ");
+		int earnings = winner.getBet()*2;
+		winner.setMoney(earnings + winner.getMoney()); 
+		winner.send("You have won your bet at " + winner.getBet());
+		winner.send("You now have an allowance of " + winner.getMoney() + "\n\n");
+		
+		loser.send("You have lost the game. Sorry, maybe next time! ");
+		int loses = loser.getBet();
+		loser.setMoney(loser.getMoney() - loses);
+		loser.send("You have lost your bet of " + loser.getBet());
+		loser.send("You now have an allowance of " + loser.getMoney() + "\n\n");
+	}
+	
+	public void gameTied(){
+		
+	}
+	
     @Override
 	public void run() {
     	while(!finished){
@@ -280,14 +333,14 @@ public class GameController extends Thread {
     		askForBet();
     		askForAnswer();
     		playGame();
+    		determineWinner();
+    		
     		player1.send("Game Complete!");
     		player2.send("Game Complete!");
     		player1.send("-------------\n");
     		player2.send("-------------\n");
     		player1.close();
     		player2.close();
-    		//finished = true;
-    		System.out.println("TESTING");
     	}
 
 	}
