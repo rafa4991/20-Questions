@@ -7,3 +7,51 @@ Final Project Documentation:
 
 Group Members: Rafael Perez (Individual Project)
 
+Description:
+	A cool 20 Questions program that pits two clients in a game of 20 Questions. It allows betting for plays at the beginning of each game
+	using an allowance that players input at the start of the program. In the case of a tie, the players can choose to play a game of 
+	Prisoner's Dilemma for extra rewards.
+
+Testing:
+	(1)To start the program, you must first go to the project directory  in the command prompt and type in the following command 
+	where port is the port number of the desired server. The port is OPTIONAL. It will default to port 53000 otherwise.
+		
+		java Server <port>
+
+	(2)Next we need to launch some clients and connect to the server. Open another command prompt window and go to the project directory. 
+	To launch the client type the following command. The port must be the same as the Server's port. Again the host and port are OPTIONAL.
+	They will default to the localhost and port 53000 to connect with the server correctly.
+
+		java Client <host> <port>
+
+	(3)Play the game! Some moments in the game may require SPECIFIC input, but the game will notify you of the details.
+
+
+Architecture and Classes:
+	
+	The system structure is made up of the following files and their functions:
+		a. Server.java
+			- This class will be implemented first in the command prompt as it functions as the systems server and the
+			  players will connect to it. It creates the server sockets all clients connect to. 
+			- Will output some actions that are happening in the server.
+		b. GameController.java
+			- This is implemented by the Server.java file and the bulk of the code is here. It works as the 
+			  controller and intermediary for the two clients that connect to it and play.
+			- All game logic is here.
+		c. Client.java
+			- This class will be implemented in the command prompt and creates client sockets that connect to the server.
+			- Implements the ClientPlayer.java file.
+		d. ClientPlayer.java
+			- This class works as the clients interface. It requests and recieves responses from the server and outputs it to the client.
+			- It lets the client input their responses and sends them to the server.
+			- Works with the Player.java file to function as a player entity.
+		e. Player.java
+			- A Player object class that holds all data relating to the player.
+			- An extension of the ClientPlayer class. It aids in more of the game logic side of the program.
+		f. HelperSocket.java
+			- A helper class that's sole purpose is to create sockets and allow stable communication between server and clients.
+		g. Game.java
+			- A game object class that is meant to function as a game entity in the case the multiple games are launched by the server
+			- Meant to work with threads so that the server can keep track of them.
+			- *** NOTE: this class doesnt do anything for this project. You can ignore for grading.
+
