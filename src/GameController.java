@@ -15,6 +15,7 @@ public class GameController extends Thread {
 	private int rounds = 0;
 	//private boolean tie = false;
 	private boolean rematch = false;
+	private boolean dilemma = false;
 	private ArrayList<ClientPlayer> players = new ArrayList<ClientPlayer>();
 	
 	//(COMPLETE) Constructor of GameController
@@ -64,6 +65,7 @@ public class GameController extends Thread {
 		for(ClientPlayer player : players){
 			player.reset();
 			try{
+				player.send("Your current allowance: " + player.getMoney() + "\n");
 				int bet = Integer.parseInt(player.askUser("How much would you like to bet?"));
 				player.send("\n");
 				if(bet > player.getMoney()){
@@ -276,7 +278,7 @@ public class GameController extends Thread {
 	public boolean isFinished(){
 		return finished;
 	}
-	
+	//(COMPLETE)Method that determines the winner and loser and does specific logic off of it.
 	public void determineWinner(){
 		String border = "***********************";
 		player1.send(border);
@@ -324,14 +326,129 @@ public class GameController extends Thread {
 	}
 	//In the case of a tie, this method gives the players the decision to settle with the tie or play a sudden death game
 	public void gameTied(){
+		for(ClientPlayer player : players){
+			player.send("Since the game is tied you have the option of playing a game of Prisoner's Dilemma.\n");
+			player.send("#################################################");
+			player.send("------------The rules of Prisoner's Dilemma-------------");
+			player.send("(1)Each player will bet half the lowest bet amongst each other.");
+			player.send("     a.For instance, if Player 1 betted 100 and Player 2 betted 50, then both will bet 25.");
+			player.send("(2)Both players will be asked if they want to STEAL or SPLIT their bets. ");
+			player.send("(3)If both players pick SPLIT, then both WIN a reward of DOUBLE their bets.");
+			player.send("(4)If one player picks SPLIT and the other picks STEAL:");
+			player.send("     a.The stealer wins QUADRUPLE their bet.");
+			player.send("     b.The spliter loses their bet.");
+			player.send("(3)If both players pick STEAL, then both LOSE DOUBLE their bets. ");
+			player.send("#################################################\n\n");
+		}
+		String message = "For there to be a game of Prisoner's Dilemma, both players must agree.\n";
+		player1.send(message);
+		player2.send(message);
 		
+		player2.send("Waiting on opponent to make choice...");
+		String player1Choice = player1.askUser("Would you like to play Prisoner's Dilemma(yes/no)?");
+		player1.send("Waiting on opponent to make choice...");
+		String player2Choice = player2.askUser("Would you like to play Prisoner's Dilemma(yes/no)?");
+		if(player1Choice.equalsIgnoreCase("yes") && player2Choice.equalsIgnoreCase("yes")){
+			dilemma = true;
+			message = "You both agreed to play Prisoner's Dilemma!";
+			player1.send(message);
+			player2.send(message);
+		}else{
+			dilemma = false;
+			message = "Sorry, someone didn't want to play Prisoner's Dilemma. Maybe next time!";
+			player1.send(message);
+			player2.send(message);
+		}
+		
+	}
+	//
+	public void playPrisonerDilemma(){
+		
+		int newBet = 0;
+		if(player1.getBet() >= player2.getBet())
+			newBet = player2.getBet()/2;
+		else
+			newBet = player1.getBet()/2;
+		player1.setBet(newBet);
+		player2.setBet(newBet);
+		
+		String message = "According to the bets made before, each player will be betting: " + newBet + "\n";
+		player1.send(message);
+		player2.send(message);
+		
+		player2.send("Waiting on opponent to make decision...\n");
+		String player1Answer = player1.askUser("Would you like to SPLIT or STEAL?");
+		player1.send("Waiting on opponent to make decision...\n");
+		String player2Answer = player2.askUser("Would you like to SPLIT or STEAL?");
+		
+		message = "\nBoth answers are in!\n";
+		player1.send(message);
+		player2.send(message);
+		
+		//Game logic for player choice combinations
+		if(player1Answer.equalsIgnoreCase("SPLIT") && player2Answer.equalsIgnoreCase("SPLIT")){
+			message = "You both picked SPLIT!\n";
+			for(ClientPlayer player : players){
+				player.send(message);
+				int earnings = player.getBet() * 2;
+				player.setMoney(player.getMoney() + earnings);
+				player.send("You both won double your bets with a total of: " + earnings);
+				player.send("You now have an allowance of: " + player.getMoney() + "\n\n");
+			}
+		}else if(player1Answer.equalsIgnoreCase("STEAL") && player2Answer.equalsIgnoreCase("STEAL")){
+			message = "You both picked STEAL!\n";
+			for(ClientPlayer player : players){
+				player.send(message);
+				int loses = player.getBet();
+				player.setMoney(player.getMoney() - loses);
+				player.send("You both lost your bets of: " + loses);
+				player.send("You now have an allowance of: " + player.getMoney() + "\n\n");
+			}
+		}else if(player1Answer.equalsIgnoreCase("SPLIT") && player2Answer.equalsIgnoreCase("STEAL")){
+			player1.send("You picked SPLIT!\nYour opponent picked STEAL!\n");
+			player1.send("Sorry, but that means you lose your bet of: " + player1.getBet());
+			player1.setMoney(player1.getMoney() - player1.getBet());
+			player1.send("You now have an allowance of: " + player1.getMoney() + "\n\n");
+			
+			player2.send("You picked STEAL!\nYour opponent picked SPLIT!\n");
+			int earnings = player2.getBet()*4;
+			player2.send("That means you won 4 times your bet of: " + player2.getBet());
+			player2.send("You won " + earnings + " in total!");
+			player2.setMoney(player2.getMoney() + earnings);
+			player2.send("You now have an allowance of: " + player2.getMoney() + "\n\n");
+			
+		}else if(player2Answer.equalsIgnoreCase("SPLIT") && player1Answer.equalsIgnoreCase("STEAL")){
+			player2.send("You picked SPLIT!\nYour opponent picked STEAL!\n");
+			player2.send("Sorry, but that means you lose your bet of: " + player2.getBet());
+			player2.setMoney(player2.getMoney() - player2.getBet());
+			player2.send("You now have an allowance of: " + player2.getMoney() + "\n\n");
+			
+			player1.send("You picked STEAL!\nYour opponent picked SPLIT!\n");
+			int earnings = player2.getBet()*4;
+			player1.send("That means you won 4 times your bet of: " + player1.getBet());
+			player1.send("You won " + earnings + " in total!");
+			player1.setMoney(player1.getMoney() + earnings);
+			player1.send("You now have an allowance of: " + player1.getMoney() + "\n\n");
+		}else{
+			for(ClientPlayer player : players){
+				player.send("Sorry. Someone put invalid input.");
+				player.send("Game has been cancelled and no money was lost or gained.\n");
+			}
+		}
+		
+		for(ClientPlayer player : players){
+			player.send("Thanks for playing Prisoner's Dilemma! Come again.\n");
+			player.send("#################################################\n\n");
+		}
 		
 	}
 	
-	//Function that asks players after the match if they would like a re-match.
+	//(COMPLETE)Function that asks players after the match if they would like a re-match.
 	public void askForRematch(){
 		String message = "For there to be a rematch, both players must agree.";
+		player2.send("Waiting on opponent to make choice...");
 		String player1Rematch = player1.askUser("Would you like a rematch(yes/no)?");
+		player1.send("Waiting on opponent to make choice...");
 		String player2Rematch = player2.askUser("Would you like a rematch(yes/no)?");
 		
 		if(player1Rematch.equalsIgnoreCase("yes") && player2Rematch.equalsIgnoreCase("yes")){
@@ -347,6 +464,12 @@ public class GameController extends Thread {
 			finished = true;
 		}
 	}
+	public void goodbye(){
+		for(ClientPlayer player : players){
+			player.send("Thank for playing 20 Questions!\n");
+			player.send("See you next time!\n");
+		}
+	}
 	
     @Override
 	public void run() {
@@ -360,7 +483,9 @@ public class GameController extends Thread {
     		player1.send("-------------\n");
     		player2.send("-------------\n");
     		determineWinner();
-    		
+    		if(dilemma){
+    			playPrisonerDilemma();
+    		}
     		askForRematch();
     		if(rematch) {
     			player1.reset();
@@ -370,9 +495,11 @@ public class GameController extends Thread {
     			player2.setTurn(false);
     			player2.setQuestioner(false);
     			finished = false;
+    			dilemma = false;
     			continue;
     		}
-    		
+    		stop = true;
+    		goodbye();
     		player1.close();
     		player2.close();
     	}
