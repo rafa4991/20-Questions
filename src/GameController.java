@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 //Controller Class that handles a single thread game of 20 Questions
-public class GameController extends Thread {
+public class GameController {
 	boolean finished = false;
 	boolean stop = false;
 	private Game game;
@@ -110,7 +110,7 @@ public class GameController extends Thread {
 		player2.send("Both answers are in.\n");
 	}
 	
-	//Starts game loop that runs until a winner is decided
+	//(COMPLETE) Starts game loop that runs until a winner is decided
 	public void playGame(){
 		player1.send("GAME START!\n");
 		player2.send("GAME START!\n");
@@ -120,7 +120,6 @@ public class GameController extends Thread {
 			for(ClientPlayer player : players){
 				if(player.isQuestioner()){
 					if(rounds == 1){
-						player.send("First round finished. Next round!");
 						player.send("Your turn to guess your opponent's word!\n");
 					}
 					
@@ -162,9 +161,13 @@ public class GameController extends Thread {
 				player.send("\n");
 				String historyLine = "Response: " + getOpponentResponse();
 				boolean recorded = false;
+				int counter = 0;
 				for(String line : player.getHistory()){
+					String currentLine = player.getHistory().get(counter);
 					if(line.equalsIgnoreCase(historyLine))
 						recorded = true;
+					
+					counter++;
 				}
 				if(!recorded)
 					player.addHistory(historyLine);
@@ -186,7 +189,8 @@ public class GameController extends Thread {
 					player.send("You finished with a score of " + player.getScore() + ".\n");
 					rounds = rounds + 1;
 					if(rounds < 2){
-						player.send("First round finished. Next round!");
+						player1.send("First round finished. Next round!");
+						player2.send("First round finished. Next round!");
 						player.send("Your opponent will now try to figure out your word!\n");
 						player.send("Waiting on opponent to ask question or make a guess...\n");
 						nextTurn();
@@ -221,8 +225,8 @@ public class GameController extends Thread {
 	
 	//(COMPLETE) Method that asks the non-questioner user the question the other user gave him.
 	public void askQuestion(ClientPlayer player){
-		player.send("Here is the question your opponent asked.");
-		player.send("Please answer with 'yes' or 'no'.");
+		player.send("Here is the question your opponent asked.\n");
+		//player.send("Please answer with 'yes' or 'no'.");
 		String response = player.askUser(getOpponentQuestion());
 		player.addResponse(response);
 		player.send("Waiting on opponent to ask question or make a guess...\n");
@@ -313,9 +317,9 @@ public class GameController extends Thread {
 		}
 		
 		winner.send("You have won the game! Good job, champ! ");
-		int earnings = winner.getBet()*2;
+		int earnings = winner.getBet();
 		winner.setMoney(earnings + winner.getMoney()); 
-		winner.send("You have won your bet at " + winner.getBet());
+		winner.send("You have won your bet of " + winner.getBet());
 		winner.send("You now have an allowance of " + winner.getMoney() + "\n\n");
 		
 		loser.send("You have lost the game. Sorry, maybe next time! ");
@@ -324,7 +328,7 @@ public class GameController extends Thread {
 		loser.send("You have lost your bet of " + loser.getBet());
 		loser.send("You now have an allowance of " + loser.getMoney() + "\n\n");
 	}
-	//In the case of a tie, this method gives the players the decision to settle with the tie or play a sudden death game
+	//(COMPLETE)In the case of a tie, this method gives the players the decision to settle with the tie or play a sudden death game
 	public void gameTied(){
 		for(ClientPlayer player : players){
 			player.send("Since the game is tied you have the option of playing a game of Prisoner's Dilemma.\n");
@@ -355,13 +359,14 @@ public class GameController extends Thread {
 			player2.send(message);
 		}else{
 			dilemma = false;
-			message = "Sorry, someone didn't want to play Prisoner's Dilemma. Maybe next time!";
+			message = "Sorry, someone didn't want to play Prisoner's Dilemma. Maybe next time!\n";
 			player1.send(message);
 			player2.send(message);
 		}
 		
 	}
-	//
+	
+	//(COMPLETE) Method that plays a game of Prisoner's Dilemma.
 	public void playPrisonerDilemma(){
 		
 		int newBet = 0;
@@ -440,6 +445,7 @@ public class GameController extends Thread {
 			player.send("Thanks for playing Prisoner's Dilemma! Come again.\n");
 			player.send("#################################################\n\n");
 		}
+		dilemma = false;
 		
 	}
 	
@@ -468,25 +474,55 @@ public class GameController extends Thread {
 		for(ClientPlayer player : players){
 			player.send("Thank for playing 20 Questions!\n");
 			player.send("See you next time!\n");
+			player.close();
 		}
+		player1.close();
+		player2.close();
 	}
 	
-    @Override
+    
 	public void run() {
     	while(!stop){
+    		//Displays the rules of 20 Questions
     		rules();
+    		//Asks each player how much they want to bet on the game
     		askForBet();
+    		//Asks each player the mystery word they want to use in the game
     		askForAnswer();
+    		
+    		//Play 20 Questions
     		playGame();
+    		
+    		//When the game is done
     		player1.send("Game Complete!");
     		player2.send("Game Complete!");
     		player1.send("-------------\n");
     		player2.send("-------------\n");
+    		
+    		//Wins out who won and does functions off of that
     		determineWinner();
+    		
+    		//If players want to play Prisoner's Dilemma
     		if(dilemma){
     			playPrisonerDilemma();
     		}
+    		
+    		//Check if they have any money left. If not, we stop the game
+    		if(player1.getMoney() <= 0 || player2.getMoney() <= 0){
+    			if(player1.getMoney() <= 0){
+    				player1.send("Sorry. You are all out of money!");
+    				player2.send(player1.getName() + " is all out of money. Good job staying alive!");
+    			}else{
+    				player2.send("Sorry. You are all out of money!");
+    				player1.send(player2.getName() + " is all out of money. Good job staying alive!");
+    			}
+    			break;
+    		}
+    		
+    		//Ask if they want a rematch.
     		askForRematch();
+    		
+    		//If they want rematch, set up the game.
     		if(rematch) {
     			player1.reset();
     			player2.reset();
@@ -496,13 +532,16 @@ public class GameController extends Thread {
     			player2.setQuestioner(false);
     			finished = false;
     			dilemma = false;
+    			rounds = 0;
     			continue;
     		}
+    		
+    		//Stop the program
     		stop = true;
-    		goodbye();
-    		player1.close();
-    		player2.close();
+    		
     	}
-
+    	
+    	// 	
+    	goodbye();
 	}
 }

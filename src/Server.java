@@ -7,19 +7,25 @@ public class Server {
     
     public static void main(String[] args) throws Exception {
     	System.out.println("20 Questions Server");
-        System.out.println("Usage: java Server <number of games> <port> ");
+    	System.out.println("Usage: java Server <port> ");
+    	
+//NOTE: Ignore the NUMBER OF GAMES elements. Are only present in case this program becomes capable of launching multiple game threads.
+    	
+        //System.out.println("Usage: java Server <port> <number of games>");
         
-        int numGames = 1;
+    	int port = 53000;
         if(args.length > 0) 
-        	numGames = Integer.parseInt(args[0]);
+        	port = Integer.parseInt(args[0]);
+        else 
+        	System.out.println("Port not specified, defaulting to 53000");
+    	
+        int numGames = 1;
+        if(args.length > 1) 
+        	numGames = Integer.parseInt(args[1]);
         else 
         	System.out.println("Number of games not specified, defaulting to 1");
         
-        int port = 53000;
-        if(args.length > 1) 
-        	port = Integer.parseInt(args[1]);
-        else 
-        	System.out.println("Port not specified, defaulting to 53000");
+        
         
         Server server = new Server(numGames ,port);
         
@@ -42,7 +48,7 @@ public class Server {
 	            GameController game = new GameController(player1, player2);
 	            System.out.println("Game between " + player1.getName() + " and " + player2.getName() + " successfully created.");
 	            games.add(game);
-	            game.start();
+	            game.run();
 	            
 	          	
 	         } catch(Exception e) {

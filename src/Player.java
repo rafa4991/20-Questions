@@ -89,10 +89,12 @@ public class Player{
 	//Resets players 
 	public void reset(){
 		this.bet = 0;
+		this.score = 100;
 		this.answer = "";
 		this.questions.clear();
 		this.responses.clear();
 		this.guesses.clear();
+		this.history.clear();
 	}
 	
 	
