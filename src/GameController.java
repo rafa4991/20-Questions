@@ -159,18 +159,19 @@ public class GameController {
 				player.send(player.getLatestQuestion() + " " + getOpponentResponse());
 				player.send("********");
 				player.send("\n");
-				String historyLine = "Response: " + getOpponentResponse();
-				boolean recorded = false;
-				int counter = 0;
-				for(String line : player.getHistory()){
-					String currentLine = player.getHistory().get(counter);
-					if(line.equalsIgnoreCase(historyLine))
-						recorded = true;
-					
-					counter++;
+				
+				String newLine = "Response: " + getOpponentResponse();
+				
+				String lastLine = player.getHistory().get(player.getHistory().size() -1);
+				//System.out.println(lastLine);
+				
+				if(lastLine.startsWith("Asked question:")){
+					player.addHistory(newLine);
 				}
-				if(!recorded)
-					player.addHistory(historyLine);
+				
+				
+				
+				
 			}
 			player.send("Current Score: " + player.getScore());
 			player.send("[a] Make a guess.");
@@ -470,6 +471,7 @@ public class GameController {
 			finished = true;
 		}
 	}
+	//(COMPLETE)Method that outputs a goodbye message when the program ends.
 	public void goodbye(){
 		for(ClientPlayer player : players){
 			player.send("\n");
@@ -481,7 +483,7 @@ public class GameController {
 		player2.close();
 	}
 	
-    
+    //(COMPLETE) Runs the program
 	public void run() {
     	while(!stop){
     		//Displays the rules of 20 Questions
