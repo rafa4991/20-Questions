@@ -28,11 +28,12 @@ public class Client {
 			System.out.println("Port not specified, defaulting to port 53000");
 		}
 		
-		while(true){
+		//while(true){
 			//System.out.println("TEST");
 			try{
 				Client client = new Client(host, port);
 				client.start();
+				
 			} catch(Exception e){
 				System.out.println("Connection to server failed. Retrying...");
 			}
@@ -41,7 +42,7 @@ public class Client {
 			} catch (Exception e) {
 				
 			}
-		}
+		//}
 	}
 	//Create the client socket and the input/output gateways
 	Client(String host, int port) throws Exception{
@@ -57,6 +58,9 @@ public class Client {
 			
 			if(response.endsWith("?")){
 				helper.writeln(stdin.readLine());
+			}
+			if(response.equalsIgnoreCase("See you next time!")){
+				break;
 			}
 		}
 	}

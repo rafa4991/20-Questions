@@ -472,8 +472,9 @@ public class GameController {
 	}
 	public void goodbye(){
 		for(ClientPlayer player : players){
+			player.send("\n");
 			player.send("Thank for playing 20 Questions!\n");
-			player.send("See you next time!\n");
+			player.send("See you next time!");
 			player.close();
 		}
 		player1.close();

@@ -36,7 +36,7 @@ public class Server {
         System.out.println("20 Questions Server is Running");
         System.out.println("Listening on port " + port);
         
-        for(int i = 0; i < numGames; ++i) {
+        //for(int i = 0; i < numGames; i++) {
 	        try {
 	          	
 	          	ClientPlayer player1 = new ClientPlayer(port);
@@ -49,12 +49,12 @@ public class Server {
 	            System.out.println("Game between " + player1.getName() + " and " + player2.getName() + " successfully created.");
 	            games.add(game);
 	            game.run();
-	            
+	            System.out.println("Game completed!");
 	          	
 	         } catch(Exception e) {
 	                System.out.println("An error occurred while starting game threads");
 	         }
-        }
+        //}
 	}
 
 	
